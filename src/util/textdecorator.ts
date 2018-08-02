@@ -1,7 +1,5 @@
 import * as moment from "moment";
 
-import { workspace } from "vscode";
-
 import { GitBlame } from "../git/blame";
 import {
     IGitCommitInfo,
@@ -10,19 +8,18 @@ import {
 } from "../interfaces";
 import { walkObject } from "./objectpath";
 import { Properties, Property } from "./property";
+import { Translation } from "./translation";
 
 export class TextDecorator {
     public static toTextView(commit: IGitCommitInfo): string {
         if (GitBlame.isBlankCommit(commit)) {
-            return Property.get(Properties.StatusBarMessageNoCommit) as string;
+            return Property.get(Properties.StatusBarMessageNoCommit);
         }
 
         const normalizedCommitInfo = TextDecorator.normalizeCommitInfoTokens(
             commit,
         );
-        const messageFormat = Property.get(
-            Properties.StatusBarMessageFormat,
-        ) as string;
+        const messageFormat = Property.get(Properties.StatusBarMessageFormat);
 
         return TextDecorator.parseTokens(messageFormat, normalizedCommitInfo);
     }
@@ -37,23 +34,32 @@ export class TextDecorator {
         const minutes = momentNow.diff(momentThen, "minutes");
 
         if (minutes <= 4) {
-            return "right now";
+            return Translation.do("time.right_now");
+        } else if (minutes === 1) {
+            return Translation.do("time.minute", minutes);
         } else if (minutes <= 70) {
-            return (
-                minutes + " " + (minutes === 1 ? "minute" : "minutes") + " ago"
-            );
+            return Translation.do("time.minute_plural", minutes);
+        } else if (hours === 1) {
+            return Translation.do("time.hour", hours);
         } else if (hours <= 47) {
-            return hours + " " + (hours === 1 ? "hour" : "hours") + " ago";
+            return Translation.do("time.hour_plural", hours);
+        } else if (days === 1) {
+            return Translation.do("time.day", days);
         } else if (days <= 40) {
-            return days + " " + (days === 1 ? "day" : "days") + " ago";
+            return Translation.do("time.day_plural", days);
+        } else if (months === 1) {
+            return Translation.do("time.month", months);
         } else {
-            return months + " " + (months === 1 ? "month" : "months") + " ago";
+            return Translation.do("time.month_plural", months);
         }
     }
 
     public static parseTokens(
         target: string,
-        tokens: IInfoTokenNormalizedCommitInfo | IInfoTokenHash | object,
+        tokens:
+            IInfoTokenNormalizedCommitInfo |
+            IInfoTokenHash |
+            object,
     ): string {
         const tokenRegex = /\$\{([a-z\.\-\_]{1,})[,]*(|.{1,}?)(?=\})}/gi;
 

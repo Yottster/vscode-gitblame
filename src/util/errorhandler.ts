@@ -1,7 +1,7 @@
 import { OutputChannel, window } from "vscode";
 
-import { TITLE_SHOW_LOG } from "../constants";
 import { Properties, Property } from "./property";
+import { Translation } from "./translation";
 
 enum LogCategory {
     Info = "info",
@@ -27,11 +27,14 @@ export class ErrorHandler {
     }
 
     public static logCritical(error: Error, message: string): void {
-        ErrorHandler.getInstance().writeToLog(
+        const instance = ErrorHandler.getInstance();
+        instance.writeToLog(
             LogCategory.Critical,
             error.toString(),
         );
-        ErrorHandler.getInstance().showErrorMessage(message);
+        instance.showErrorMessage(
+            message,
+        );
     }
 
     public static getInstance(): ErrorHandler {
@@ -73,12 +76,13 @@ export class ErrorHandler {
     }
 
     private async showErrorMessage(message: string): Promise<void> {
+        const showLog = Translation.do("title.show_log");
         const selectedItem = await window.showErrorMessage(
             message,
-            TITLE_SHOW_LOG,
+            showLog,
         );
 
-        if (selectedItem === TITLE_SHOW_LOG) {
+        if (selectedItem === showLog) {
             this.outputChannel.show();
         }
     }
@@ -98,7 +102,7 @@ export class ErrorHandler {
     }
 
     private logCategoryAllowed(level: LogCategory): boolean {
-        const enabledLevels = Property.get(Properties.LogLevel, []) as string[];
+        const enabledLevels = Property.get(Properties.LogLevel);
 
         return enabledLevels.includes(level);
     }

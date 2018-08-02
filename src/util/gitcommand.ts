@@ -5,6 +5,7 @@ import { workspace } from "vscode";
 
 import { GIT_COMMAND_IN_PATH } from "../constants";
 import { ErrorHandler } from "./errorhandler";
+import { Translation } from "./translation";
 
 export function getGitCommand(): Promise<string> {
     const gitConfig = workspace.getConfiguration("git");
@@ -20,11 +21,11 @@ export function getGitCommand(): Promise<string> {
             if (err) {
                 ErrorHandler.logError(
                     new Error(
-                        `Can not execute "${
-                            commandPath
-                        }" (your git.path property) falling back to "${
-                            GIT_COMMAND_IN_PATH
-                        }"`,
+                        Translation.do(
+                            "error.gitcommand",
+                            commandPath,
+                            GIT_COMMAND_IN_PATH,
+                        ),
                     ),
                 );
                 resolve(GIT_COMMAND_IN_PATH);

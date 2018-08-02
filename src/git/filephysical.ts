@@ -6,6 +6,7 @@ import { IGitBlameInfo, IGitCommitInfo } from "../interfaces";
 import { ErrorHandler } from "../util/errorhandler";
 import { execute } from "../util/execcommand";
 import { getGitCommand } from "../util/gitcommand";
+import { Translation } from "../util/translation";
 import { StatusBarView } from "../view";
 import { GitBlame } from "./blame";
 import { GitFile } from "./file";
@@ -144,9 +145,7 @@ export class GitFilePhysical extends GitFile {
             StatusBarView.getInstance().stopProgress();
             this.startCacheInterval();
             ErrorHandler.logInfo(
-                `File "${
-                    this.fileName.fsPath
-                }" is not a decendant of a git repository`,
+                Translation.do("info.file_not_git", this.fileName.fsPath),
             );
             this.blameInfoPromise = Promise.resolve(blameInfo);
         }
@@ -186,11 +185,11 @@ export class GitFilePhysical extends GitFile {
                 resolve(GitBlame.blankBlameInfo());
             } else {
                 ErrorHandler.logInfo(
-                    `Blamed file "${
-                        this.fileName.fsPath
-                    }" and found ${
-                        Object.keys(blameInfo.commits).length
-                    } commits`,
+                    Translation.do(
+                        "info.file_blamed",
+                        this.fileName.fsPath,
+                        Object.keys(blameInfo.commits).length,
+                    ),
                 );
                 resolve(blameInfo);
             }

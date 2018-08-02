@@ -1,4 +1,5 @@
 import { ErrorHandler } from "../util/errorhandler";
+import { Translation } from "../util/translation";
 import { GitFile } from "./file";
 
 export class GitFileDummy extends GitFile {
@@ -6,9 +7,7 @@ export class GitFileDummy extends GitFile {
         super(fileName, disposeCallback);
         this.startCacheInterval();
         ErrorHandler.logInfo(
-            `Will not try to blame file "${
-                this.fileName.fsPath
-            }" as it is outside of the current workspace`,
+            Translation.do("info.file_outside", this.fileName.fsPath),
         );
     }
 }

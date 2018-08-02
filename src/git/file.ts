@@ -3,6 +3,7 @@ import { Uri, window, workspace } from "vscode";
 import { TIME_CACHE_LIFETIME } from "../constants";
 import { IGitBlameInfo } from "../interfaces";
 import { ErrorHandler } from "../util/errorhandler";
+import { Translation } from "../util/translation";
 import { GitBlame } from "./blame";
 
 export class GitFile {
@@ -25,9 +26,7 @@ export class GitFile {
 
             if (!isOpen) {
                 ErrorHandler.logInfo(
-                    `Clearing the file "${
-                        this.fileName.fsPath
-                    }" from the internal cache`,
+                    Translation.do("info.clear_file", this.fileName.fsPath),
                 );
                 this.dispose();
             }

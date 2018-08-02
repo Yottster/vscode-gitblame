@@ -1,0 +1,23 @@
+{
+    "title.view_online": "View",
+    "title.show_log": "Show Log",
+    "error.invalid_url": "Malformed URL in gitblame.commitUrl. Must be a valid web url, \"guess\", or \"no\".",
+    "error.missing_url": "Missing gitblame.commitUrl configuration value.",
+    "error.unblameable": "The current file and line can not be blamed.",
+    "error.gitcommand": "Can not execute \"{0}\" (your git.path property) falling back to \"{1}\"",
+    "info.clear_file": "Clearing the file \"{0}\" from the internal cache",
+    "info.file_outside": "Will not try to blame file \"{0}\" as it is outside of the current workspace",
+    "info.file_not_git": "File \"{0}\" is not a decendant of a git repository",
+    "info.file_blamed": "Blamed file \"{0}\" and found {1} commits",
+    "info.loading_info": "Waiting for git blame response",
+    "info.no_info": "No info about the current line",
+    "time.minute": "{0} minute ago",
+    "time.minute_plural": "{0} minutes ago",
+    "time.hour": "{0} hour ago",
+    "time.hour_plural": "{0} hours ago",
+    "time.day": "{0} day ago",
+    "time.day_plural": "{0} days ago",
+    "time.month": "{0} month ago",
+    "time.month_plural": "{0} months ago",
+    "time.right_now": "right now"
+}

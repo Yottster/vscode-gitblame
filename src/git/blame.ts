@@ -9,7 +9,7 @@ import {
     workspace,
 } from "vscode";
 
-import { HASH_NO_COMMIT_GIT, TITLE_VIEW_ONLINE } from "../constants";
+import { HASH_NO_COMMIT_GIT } from "../constants";
 import { IGitBlameInfo, IGitCommitAuthor, IGitCommitInfo } from "../interfaces";
 import { ActionableMessageItem } from "../util/actionablemessageitem";
 import { isActiveEditorValid } from "../util/editorvalidator";
@@ -18,6 +18,7 @@ import { execute } from "../util/execcommand";
 import { getGitCommand } from "../util/gitcommand";
 import { Properties, Property } from "../util/property";
 import { TextDecorator } from "../util/textdecorator";
+import { Translation } from "../util/translation";
 import { StatusBarView } from "../view";
 import { GitFile } from "./file";
 import { GitFileFactory } from "./filefactory";
@@ -89,7 +90,7 @@ export class GitBlame {
             commands.executeCommand("vscode.open", commitToolUrl);
         } else {
             window.showErrorMessage(
-                "Missing gitblame.commitUrl configuration value.",
+                Translation.do("error.missing_url"),
             );
         }
     }
@@ -145,12 +146,9 @@ export class GitBlame {
         // is responsible for keeping it disposable
         const errorHandler = ErrorHandler.getInstance();
 
-        const propertyHolder = Property.getInstance();
-
         this.disposable = Disposable.from(
             this.statusBarView,
             errorHandler,
-            propertyHolder,
         );
     }
 
@@ -215,7 +213,7 @@ export class GitBlame {
 
         if (commitToolUrl) {
             const viewOnlineAction = new ActionableMessageItem(
-                TITLE_VIEW_ONLINE,
+                Translation.do("title.view_online"),
             );
 
             viewOnlineAction.setAction(() => {
@@ -233,7 +231,7 @@ export class GitBlame {
 
         if (commitInfo.generated) {
             window.showErrorMessage(
-                "The current file and line can not be blamed.",
+                Translation.do("error.unblameable"),
             );
         }
 
@@ -246,7 +244,7 @@ export class GitBlame {
         }
 
         const parsedUrl = TextDecorator.parseTokens(
-            Property.get(Properties.CommitUrl, "guess"),
+            Property.get(Properties.CommitUrl),
             {
                 hash: commitInfo.hash,
             },
@@ -255,10 +253,7 @@ export class GitBlame {
         if (isWebUri(parsedUrl)) {
             return Uri.parse(parsedUrl);
         } else if (parsedUrl === "guess") {
-            const isWebPathPlural = Property.get(
-                Properties.IsWebPathPlural,
-                false,
-            );
+            const isWebPathPlural = Property.get(Properties.IsWebPathPlural);
             const origin = await this.getOriginOfActiveFile();
             if (origin) {
                 const uri = this.defaultWebPath(
@@ -272,8 +267,7 @@ export class GitBlame {
             }
         } else if (parsedUrl !== "no") {
             window.showErrorMessage(
-                `Malformed URL in gitblame.commitUrl. ` +
-                    `Must be a valid web url, "guess", or "no".`,
+                Translation.do("error.invalid_url"),
             );
         }
     }

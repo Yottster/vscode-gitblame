@@ -5,6 +5,7 @@ import { IGitCommitInfo } from "./interfaces";
 import { Properties, Property } from "./util/property";
 import { Spinner } from "./util/spinner";
 import { TextDecorator } from "./util/textdecorator";
+import { Translation } from "./util/translation";
 
 export class StatusBarView {
     public static getInstance(): StatusBarView {
@@ -80,12 +81,15 @@ export class StatusBarView {
             : "$(git-commit)";
         this.statusBarItem.tooltip = hasCommand
             ? "git blame"
-            : "git blame - No info about the current line";
+            : "git blame - " + Translation.do("info.no_info");
         this.statusBarItem.command = hasCommand ? "gitblame.quickInfo" : "";
         this.statusBarItem.show();
     }
 
     private setSpinner(): void {
-        this.setText(`${this.spinner} Waiting for git blame response`, false);
+        this.setText(
+            this.spinner + " " + Translation.do("info.loading_info"),
+            false,
+        );
     }
 }
