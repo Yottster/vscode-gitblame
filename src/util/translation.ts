@@ -1,6 +1,6 @@
 import { readFileSync } from "fs";
-import { ErrorHandler } from "./errorhandler";
 import { join } from "path";
+import { ErrorHandler } from "./errorhandler";
 
 export class Translation {
     public static getInstance(): Translation {
