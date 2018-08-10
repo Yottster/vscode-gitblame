@@ -9,7 +9,6 @@ import {
     workspace,
 } from "vscode";
 
-import { HASH_NO_COMMIT_GIT } from "../constants";
 import { IGitBlameInfo, IGitCommitInfo } from "../interfaces";
 import { ActionableMessageItem } from "../util/actionablemessageitem";
 import { isActiveEditorValid } from "../util/editorvalidator";
@@ -47,24 +46,29 @@ export class GitBlame {
             },
             filename: "",
             generated: !real,
-            hash: HASH_NO_COMMIT_GIT,
+            hash: GitBlame.blank,
             summary: "",
         };
     }
 
     public static isBlankCommit(commit: IGitCommitInfo): boolean {
-        return commit.hash === HASH_NO_COMMIT_GIT;
+        return commit.hash === GitBlame.blank;
     }
 
-    private disposable: Disposable;
+    private static blank: string = "0000000000000000000000000000000000000000";
+    private readonly disposable: Disposable;
     private readonly statusBarView: StatusBarView;
     private readonly files: Map<string, GitFile> = new Map();
 
     constructor() {
         this.statusBarView = StatusBarView.getInstance();
 
-        this.setupDisposables();
-        this.setupListeners();
+        const disposables = [ this.statusBarView ];
+
+        this.setupDisposables(disposables);
+        this.setupListeners(disposables);
+
+        this.disposable = Disposable.from(...disposables);
 
         this.init();
     }
@@ -129,38 +133,28 @@ export class GitBlame {
         this.disposable.dispose();
     }
 
-    private setupDisposables(): void {
+    private setupDisposables(disposable: Disposable[]): void {
         // The blamer does not use the ErrorHandler but
         // is responsible for keeping it disposable
-        const errorHandler = ErrorHandler.getInstance();
-
-        this.disposable = Disposable.from(
-            this.disposable,
-            this.statusBarView,
-            errorHandler,
-        );
+        disposable.push(ErrorHandler.getInstance());
     }
 
-    private setupListeners(): void {
-        const disposables: Disposable[] = [];
-
+    private setupListeners(disposable: Disposable[]): void {
         window.onDidChangeActiveTextEditor(
             this.onTextEditorMove,
             this,
-            disposables,
+            disposable,
         );
         window.onDidChangeTextEditorSelection(
             this.onTextEditorMove,
             this,
-            disposables,
+            disposable,
         );
         workspace.onDidSaveTextDocument(
             this.onTextEditorMove,
             this,
-            disposables,
+            disposable,
         );
-
-        this.disposable = Disposable.from(this.disposable, ...disposables);
     }
 
     private init(): void {
@@ -276,8 +270,8 @@ export class GitBlame {
             this.files.set(
                 fileName,
                 GitFileFactory.create(
-                    fileName,
-                    this.generateDisposeFunction(fileName),
+                    Uri.file(fileName),
+                    this.generateDisposeable(fileName),
                 ),
             );
         }
@@ -330,9 +324,9 @@ export class GitBlame {
         return originUrl.trim();
     }
 
-    private generateDisposeFunction(fileName): () => void {
-        return () => {
+    private generateDisposeable(fileName): Disposable {
+        return new Disposable(() => {
             this.files.delete(fileName);
-        };
+        });
     }
 }

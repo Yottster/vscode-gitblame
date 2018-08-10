@@ -1,6 +1,6 @@
 import { dirname, normalize } from "path";
 
-import { FileSystemWatcher, workspace } from "vscode";
+import { Disposable, FileSystemWatcher, Uri, workspace } from "vscode";
 
 import { IGitBlameInfo, IGitCommitInfo } from "../interfaces";
 import { ErrorHandler } from "../util/errorhandler";
@@ -19,13 +19,13 @@ export class GitFilePhysical extends GitFile {
     private workTreePromise: Promise<string>;
     private blameProcess: GitBlameStream;
 
-    constructor(fileName: string, disposeCallback: () => void) {
-        super(fileName, disposeCallback);
+    constructor(fileName: Uri, disposable: Disposable) {
+        super(fileName, disposable);
 
         this.fileSystemWatcher = this.setupWatcher();
     }
 
-    public async blame(): Promise<IGitBlameInfo> {
+    public blame(): Promise<IGitBlameInfo> {
         StatusBarView.getInstance().startProgress();
 
         if (this.blameInfoPromise) {

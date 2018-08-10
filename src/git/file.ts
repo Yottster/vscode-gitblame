@@ -1,20 +1,21 @@
-import { Uri, window } from "vscode";
+import { Disposable, Uri, window } from "vscode";
 
-import { TIME_CACHE_LIFETIME } from "../constants";
 import { IGitBlameInfo } from "../interfaces";
 import { ErrorHandler } from "../util/errorhandler";
 import { Translation } from "../util/translation";
 import { GitBlame } from "./blame";
 
 export class GitFile {
+    private static cacheLifetime: number = 240_000;
+
     public readonly fileName: Uri;
-    public disposeCallback: () => void;
+    public readonly disposable: Disposable;
 
     private cacheClearInterval: NodeJS.Timer;
 
-    constructor(fileName: string, disposeCallback: () => void) {
-        this.fileName = Uri.file(fileName);
-        this.disposeCallback = disposeCallback;
+    constructor(fileName: Uri, disposable: Disposable) {
+        this.fileName = fileName;
+        this.disposable = disposable;
     }
 
     public startCacheInterval(): void {
@@ -30,7 +31,7 @@ export class GitFile {
                 );
                 this.dispose();
             }
-        }, TIME_CACHE_LIFETIME);
+        }, GitFile.cacheLifetime);
     }
 
     public async blame(): Promise<IGitBlameInfo> {
@@ -39,7 +40,6 @@ export class GitFile {
 
     public dispose(): void {
         clearInterval(this.cacheClearInterval);
-        this.disposeCallback();
-        delete this.disposeCallback;
+        this.disposable.dispose();
     }
 }

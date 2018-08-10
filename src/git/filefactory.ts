@@ -1,24 +1,19 @@
-import { Uri, workspace } from "vscode";
+import { Disposable, Uri, workspace } from "vscode";
 
 import { GitFile } from "./file";
 import { GitFileDummy } from "./filedummy";
 import { GitFilePhysical } from "./filephysical";
 
 export class GitFileFactory {
-    public static create(
-        fileName: string,
-        disposeCallback: () => void,
-    ): GitFile {
+    public static create(fileName: Uri, disposable: Disposable): GitFile {
         if (GitFileFactory.inWorkspace(fileName)) {
-            return new GitFilePhysical(fileName, disposeCallback);
+            return new GitFilePhysical(fileName, disposable);
         } else {
-            return new GitFileDummy(fileName, disposeCallback);
+            return new GitFileDummy(fileName, disposable);
         }
     }
 
-    private static inWorkspace(fileName: string): boolean {
-        const uriFileName = Uri.file(fileName);
-
-        return !!workspace.getWorkspaceFolder(uriFileName);
+    private static inWorkspace(fileName: Uri): boolean {
+        return !!workspace.getWorkspaceFolder(fileName);
     }
 }
