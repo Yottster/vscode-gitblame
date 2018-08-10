@@ -2,6 +2,7 @@
 
 ## 2.5.0 (xxxx, x, 201x)
 
+* Bug: Sometimes it blamed a file more than once at the time. This is no longer the case.
 * Fix: Changing the name of the settings category to "Git Blame" from "Git blame configuration"
 * Feature: Moving translations and texts to a separate file.
 * Feature: Depricating a few settings:

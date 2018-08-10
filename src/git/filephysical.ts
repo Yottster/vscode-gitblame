@@ -114,9 +114,9 @@ export class GitFilePhysical extends GitFile {
         const workTree = await this.getGitWorkTree();
         const blameInfo = GitBlame.blankBlameInfo();
 
-        if (workTree) {
+        if (workTree && !this.blameInfoPromise) {
             this.blameInfoPromise = new Promise<IGitBlameInfo>(
-                (resolve, reject) => {
+                (resolve) => {
                     this.blameProcess = new GitBlameStream(
                         this.fileName,
                         workTree,
@@ -124,24 +124,23 @@ export class GitFilePhysical extends GitFile {
 
                     this.blameProcess.on(
                         "commit",
-                        this.gitAddCommit(blameInfo),
+                        this.addCommit(blameInfo),
                     );
                     this.blameProcess.on(
                         "line",
-                        this.gitAddLine(blameInfo),
+                        this.addLine(blameInfo),
                     );
                     this.blameProcess.on(
                         "end",
-                        this.gitStreamOver(
+                        this.streamOver(
                             this.blameProcess,
-                            reject,
                             resolve,
                             blameInfo,
                         ),
                     );
                 },
             );
-        } else {
+        } else if (!workTree) {
             this.startCacheInterval();
             ErrorHandler.logInfo(
                 Translation.do("info.file_not_git", this.fileName.fsPath),
@@ -152,7 +151,7 @@ export class GitFilePhysical extends GitFile {
         return this.blameInfoPromise;
     }
 
-    private gitAddCommit(
+    private addCommit(
         blameInfo: IGitBlameInfo,
     ): (internalHash: string, data: IGitCommitInfo) => void {
         return (internalHash, data) => {
@@ -160,7 +159,7 @@ export class GitFilePhysical extends GitFile {
         };
     }
 
-    private gitAddLine(
+    private addLine(
         blameInfo: IGitBlameInfo,
     ): (line: number, gitCommitHash: string) => void {
         return (line: number, gitCommitHash: string) => {
@@ -168,9 +167,8 @@ export class GitFilePhysical extends GitFile {
         };
     }
 
-    private gitStreamOver(
+    private streamOver(
         gitStream,
-        reject: (err: Error) => void,
         resolve: (val: any) => void,
         blameInfo: IGitBlameInfo,
     ): (err: Error) => void {

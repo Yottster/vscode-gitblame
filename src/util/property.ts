@@ -5,7 +5,6 @@ export enum Properties {
     IgnoreWhitespace = "ignoreWhitespace",
     InfoMessageFormat = "infoMessageFormat",
     IsWebPathPlural = "isWebPathPlural",
-    LogLevel = "logLevel",
     StatusBarMessageFormat = "statusBarMessageFormat",
     StatusBarMessageNoCommit = "statusBarMessageNoCommit",
     StatusBarPositionPriority = "statusBarPositionPriority",

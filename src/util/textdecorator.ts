@@ -7,19 +7,19 @@ import {
     IInfoTokenNormalizedCommitInfo,
 } from "../interfaces";
 import { walkObject } from "./objectpath";
-import { Properties, Property } from "./property";
+import { getProperty, Properties } from "./property";
 import { Translation } from "./translation";
 
 export class TextDecorator {
     public static toTextView(commit: IGitCommitInfo): string {
         if (GitBlame.isBlankCommit(commit)) {
-            return Property.get(Properties.StatusBarMessageNoCommit);
+            return getProperty(Properties.StatusBarMessageNoCommit);
         }
 
         const normalizedCommitInfo = TextDecorator.normalizeCommitInfoTokens(
             commit,
         );
-        const messageFormat = Property.get(Properties.StatusBarMessageFormat);
+        const messageFormat = getProperty(Properties.StatusBarMessageFormat);
 
         return TextDecorator.parseTokens(messageFormat, normalizedCommitInfo);
     }
