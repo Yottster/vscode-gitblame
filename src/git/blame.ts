@@ -1,4 +1,4 @@
-import { parse } from "path";
+import { dirname } from "path";
 
 import { isWebUri } from "valid-url";
 import {
@@ -10,13 +10,13 @@ import {
 } from "vscode";
 
 import { HASH_NO_COMMIT_GIT } from "../constants";
-import { IGitBlameInfo, IGitCommitAuthor, IGitCommitInfo } from "../interfaces";
+import { IGitBlameInfo, IGitCommitInfo } from "../interfaces";
 import { ActionableMessageItem } from "../util/actionablemessageitem";
 import { isActiveEditorValid } from "../util/editorvalidator";
 import { ErrorHandler } from "../util/errorhandler";
 import { execute } from "../util/execcommand";
 import { getGitCommand } from "../util/gitcommand";
-import { Properties, Property } from "../util/property";
+import { getProperty, Properties } from "../util/property";
 import { TextDecorator } from "../util/textdecorator";
 import { Translation } from "../util/translation";
 import { StatusBarView } from "../view";
@@ -32,41 +32,28 @@ export class GitBlame {
     }
 
     public static blankCommitInfo(real: boolean = false): IGitCommitInfo {
-        const emptyAuthor = {
-            mail: "",
-            name: "",
-            timestamp: 0,
-            tz: "",
-        } as IGitCommitAuthor;
-        const emptyCommitter = {
-            mail: "",
-            name: "",
-            timestamp: 0,
-            tz: "",
-        } as IGitCommitAuthor;
-
-        const commitInfo = {
-            author: emptyAuthor,
-            committer: emptyCommitter,
+        return {
+            author: {
+                mail: "",
+                name: "",
+                timestamp: 0,
+                tz: "",
+            },
+            committer: {
+                mail: "",
+                name: "",
+                timestamp: 0,
+                tz: "",
+            },
             filename: "",
-            generated: true,
+            generated: !real,
             hash: HASH_NO_COMMIT_GIT,
             summary: "",
-        } as IGitCommitInfo;
-
-        if (real) {
-            delete commitInfo.generated;
-        }
-
-        return commitInfo;
+        };
     }
 
     public static isBlankCommit(commit: IGitCommitInfo): boolean {
         return commit.hash === HASH_NO_COMMIT_GIT;
-    }
-
-    public static internalHash(hash: string): string {
-        return hash.substr(0, Property.get(Properties.InternalHashLength));
     }
 
     private disposable: Disposable;
@@ -98,12 +85,12 @@ export class GitBlame {
     public async showMessage(): Promise<void> {
         const commitInfo = await this.getCommitInfo();
 
-        if (commitInfo.hash === HASH_NO_COMMIT_GIT) {
+        if (GitBlame.isBlankCommit(commitInfo)) {
             this.clearView();
             return;
         }
 
-        const messageFormat = Property.get(Properties.InfoMessageFormat);
+        const messageFormat = getProperty(Properties.InfoMessageFormat);
         const normalizedTokens = TextDecorator.normalizeCommitInfoTokens(
             commitInfo,
         );
@@ -130,10 +117,11 @@ export class GitBlame {
         hash: string,
         isPlural: boolean,
     ): string {
-        return url.replace(
-            /^(git@|https:\/\/)([^:\/]+)[:\/](.*)\.git$/,
-            `https://$2/$3/${isPlural ? "commits" : "commit"}/${hash}`,
-        );
+        const commit = isPlural ? "commits" : "commit";
+        const gitUrlMatch = /^(git@|https:\/\/)([^:\/]+)[:\/](.*)\.git$/;
+        const templatePath = `https://$2/$3/${ commit }/${ hash }`;
+
+        return url.replace(gitUrlMatch, templatePath);
     }
 
     public dispose(): void {
@@ -147,6 +135,7 @@ export class GitBlame {
         const errorHandler = ErrorHandler.getInstance();
 
         this.disposable = Disposable.from(
+            this.disposable,
             this.statusBarView,
             errorHandler,
         );
@@ -244,7 +233,7 @@ export class GitBlame {
         }
 
         const parsedUrl = TextDecorator.parseTokens(
-            Property.get(Properties.CommitUrl),
+            getProperty(Properties.CommitUrl),
             {
                 hash: commitInfo.hash,
             },
@@ -253,7 +242,7 @@ export class GitBlame {
         if (isWebUri(parsedUrl)) {
             return Uri.parse(parsedUrl);
         } else if (parsedUrl === "guess") {
-            const isWebPathPlural = Property.get(Properties.IsWebPathPlural);
+            const isWebPathPlural = getProperty(Properties.IsWebPathPlural);
             const origin = await this.getOriginOfActiveFile();
             if (origin) {
                 const uri = this.defaultWebPath(
@@ -262,8 +251,6 @@ export class GitBlame {
                     isWebPathPlural,
                 );
                 return Uri.parse(uri);
-            } else {
-                return;
             }
         } else if (parsedUrl !== "no") {
             window.showErrorMessage(
@@ -331,7 +318,7 @@ export class GitBlame {
 
         const gitCommand = await getGitCommand();
         const activeFile = window.activeTextEditor.document.fileName;
-        const activeFileFolder = parse(activeFile).dir;
+        const activeFileFolder = dirname(activeFile);
         const originUrl = await execute(gitCommand, [
             "ls-remote",
             "--get-url",

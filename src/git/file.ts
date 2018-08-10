@@ -1,4 +1,4 @@
-import { Uri, window, workspace } from "vscode";
+import { Uri, window } from "vscode";
 
 import { TIME_CACHE_LIFETIME } from "../constants";
 import { IGitBlameInfo } from "../interfaces";

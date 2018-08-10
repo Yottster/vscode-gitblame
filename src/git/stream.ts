@@ -6,7 +6,7 @@ import { Uri } from "vscode";
 import { IGitCommitAuthor, IGitCommitInfo } from "../interfaces";
 import { ErrorHandler } from "../util/errorhandler";
 import { getGitCommand } from "../util/gitcommand";
-import { Properties, Property } from "../util/property";
+import { getProperty, Properties } from "../util/property";
 import { GitBlame } from "./blame";
 
 export class GitBlameStream extends EventEmitter {
@@ -53,7 +53,7 @@ export class GitBlameStream extends EventEmitter {
 
         processArguments.push("blame");
 
-        if (Property.get(Properties.IgnoreWhitespace)) {
+        if (getProperty(Properties.IgnoreWhitespace)) {
             processArguments.push("-w");
         }
 
@@ -155,16 +155,15 @@ export class GitBlameStream extends EventEmitter {
         finalLine: number,
     ): void {
         for (let i = 0; i < lines; i++) {
-            this.emit("line", finalLine + i, GitBlame.internalHash(hash));
+            this.emit("line", finalLine + i, hash);
         }
     }
 
     private commitInfoToCommitEmit(commitInfo: IGitCommitInfo): void {
-        const internalHash = GitBlame.internalHash(commitInfo.hash);
-
-        if (!this.emittedCommits[internalHash]) {
-            this.emittedCommits[internalHash] = true;
-            this.emit("commit", internalHash, commitInfo);
+        const { hash } = commitInfo;
+        if (!this.emittedCommits[hash]) {
+            this.emittedCommits[hash] = true;
+            this.emit("commit", hash, commitInfo);
         }
     }
 }

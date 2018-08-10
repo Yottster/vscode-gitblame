@@ -1,5 +1,14 @@
 # Change Log
 
+## 2.5.0 (xxxx, x, 201x)
+
+* Fix: Changing the name of the settings category to "Git Blame" from "Git blame configuration"
+* Feature: Moving translations and texts to a separate file.
+* Feature: Depricating a few settings:
+** `gitblame.logLevel` - We now log all messages
+** `gitblame.progressSpinner` - The default spinner is unmodified
+** `gitblame.internalHashLength` - It is now always the git standard length of 40
+
 ## 2.4.4 (August 1, 2018)
 
 * Fix: Updating dependencies

@@ -12,7 +12,7 @@ export interface IGitCommitInfo {
     committer: IGitCommitAuthor;
     summary: string;
     filename: string;
-    generated?: true;
+    generated: boolean;
 }
 
 export interface IGitCommitInfoArray {

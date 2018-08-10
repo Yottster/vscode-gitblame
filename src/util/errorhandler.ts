@@ -1,9 +1,8 @@
 import { OutputChannel, window } from "vscode";
 
-import { Properties, Property } from "./property";
 import { Translation } from "./translation";
 
-enum LogCategory {
+enum LogLevel {
     Info = "info",
     Error = "error",
     Command = "command",
@@ -12,16 +11,16 @@ enum LogCategory {
 
 export class ErrorHandler {
     public static logInfo(message: string) {
-        ErrorHandler.getInstance().writeToLog(LogCategory.Info, message);
+        ErrorHandler.getInstance().writeToLog(LogLevel.Info, message);
     }
 
     public static logCommand(message: string): void {
-        ErrorHandler.getInstance().writeToLog(LogCategory.Command, message);
+        ErrorHandler.getInstance().writeToLog(LogLevel.Command, message);
     }
 
     public static logError(error: Error): void {
         ErrorHandler.getInstance().writeToLog(
-            LogCategory.Error,
+            LogLevel.Error,
             error.toString(),
         );
     }
@@ -29,7 +28,7 @@ export class ErrorHandler {
     public static logCritical(error: Error, message: string): void {
         const instance = ErrorHandler.getInstance();
         instance.writeToLog(
-            LogCategory.Critical,
+            LogLevel.Critical,
             error.toString(),
         );
         instance.showErrorMessage(
@@ -49,20 +48,11 @@ export class ErrorHandler {
 
     private static timestamp(): string {
         const now = new Date();
-        const hour = now
-            .getHours()
-            .toString()
-            .padStart(2, "0");
-        const minute = now
-            .getMinutes()
-            .toString()
-            .padStart(2, "0");
-        const second = now
-            .getSeconds()
-            .toString()
-            .padStart(2, "0");
+        const hour = now.getHours().toString().padStart(2, "0");
+        const minute = now.getMinutes().toString().padStart(2, "0");
+        const second = now.getSeconds().toString().padStart(2, "0");
 
-        return `${hour}:${minute}:${second}`;
+        return `${ hour }:${ minute }:${ second }`;
     }
 
     private readonly outputChannel: OutputChannel;
@@ -87,23 +77,11 @@ export class ErrorHandler {
         }
     }
 
-    private writeToLog(category: LogCategory, message: string): boolean {
-        const allowCategory = this.logCategoryAllowed(category);
-
-        if (allowCategory) {
-            const trimmedMessage = message.trim();
-            const timestamp = ErrorHandler.timestamp();
-            this.outputChannel.appendLine(
-                `[ ${timestamp} | ${category} ] ${trimmedMessage}`,
-            );
-        }
-
-        return allowCategory;
-    }
-
-    private logCategoryAllowed(level: LogCategory): boolean {
-        const enabledLevels = Property.get(Properties.LogLevel);
-
-        return enabledLevels.includes(level);
+    private writeToLog(level: LogLevel, message: string): void {
+        const trimmedMessage = message.trim();
+        const timestamp = ErrorHandler.timestamp();
+        this.outputChannel.appendLine(
+            `[ ${ timestamp } | ${ level } ] ${ trimmedMessage }`,
+        );
     }
 }

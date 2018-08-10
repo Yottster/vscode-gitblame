@@ -142,7 +142,6 @@ export class GitFilePhysical extends GitFile {
                 },
             );
         } else {
-            StatusBarView.getInstance().stopProgress();
             this.startCacheInterval();
             ErrorHandler.logInfo(
                 Translation.do("info.file_not_git", this.fileName.fsPath),
@@ -177,7 +176,6 @@ export class GitFilePhysical extends GitFile {
     ): (err: Error) => void {
         return (err: Error) => {
             gitStream.removeAllListeners();
-            StatusBarView.getInstance().stopProgress();
             this.startCacheInterval();
 
             if (err) {
