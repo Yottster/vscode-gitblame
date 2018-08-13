@@ -3,7 +3,6 @@ export interface IGitCommitAuthor {
     mail: string;
     timestamp: number;
     tz: string;
-    temporary?: true;
 }
 
 export interface IGitCommitInfo {
@@ -15,17 +14,9 @@ export interface IGitCommitInfo {
     generated: boolean;
 }
 
-export interface IGitCommitInfoArray {
-    [hash: string]: IGitCommitInfo;
-}
-
-export interface IGitCommitLineArray {
-    [lineNumber: number]: string;
-}
-
 export interface IGitBlameInfo {
-    commits: IGitCommitInfoArray;
-    lines: IGitCommitLineArray;
+    commits: { [hash: string]: IGitCommitInfo; };
+    lines: { [lineNumber: number]: string; };
 }
 
 export interface IInfoTokenNormalizedCommitInfo {
@@ -45,8 +36,4 @@ export interface IInfoTokenNormalizedCommitInfo {
         custom: (momentFormat: string) => string;
         from: () => string;
     };
-}
-
-export interface IInfoTokenHash {
-    hash: string;
 }

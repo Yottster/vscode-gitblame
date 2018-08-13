@@ -8,19 +8,15 @@ export function execute(
     options: ExecOptions = {},
 ): Promise<string> {
     return new Promise((resolve) => {
-        ErrorHandler.logCommand(`${command} ${args.join(" ")}`);
-        execFile(
-            command,
-            args,
-            options,
-            (error, stdout, stderr) => {
-                if (error) {
-                    ErrorHandler.logError(new Error(stderr));
-                    resolve("");
-                } else {
-                    resolve(stdout);
-                }
-            },
-        );
+        ErrorHandler.logCommand(`${ command } ${ args.join(" ") }`);
+        const callback = (error, stdout) => {
+            if (error) {
+                ErrorHandler.logError(error);
+                resolve("");
+            } else {
+                resolve(stdout);
+            }
+        };
+        execFile(command, args, options, callback);
     });
 }

@@ -3,7 +3,6 @@ import * as moment from "moment";
 import { GitBlame } from "../git/blame";
 import {
     IGitCommitInfo,
-    IInfoTokenHash,
     IInfoTokenNormalizedCommitInfo,
 } from "../interfaces";
 import { walkObject } from "./objectpath";
@@ -58,7 +57,6 @@ export class TextDecorator {
         target: string,
         tokens:
             IInfoTokenNormalizedCommitInfo |
-            IInfoTokenHash |
             object,
     ): string {
         const tokenRegex = /\$\{([a-z\.\-\_]{1,})[,]*(|.{1,}?)(?=\})}/gi;

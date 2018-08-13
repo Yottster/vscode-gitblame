@@ -46,6 +46,8 @@ export class GitBlameStream extends EventEmitter {
     public dispose(): void {
         this.process.kill("SIGKILL");
         this.process.removeAllListeners();
+        this.process.stderr.removeAllListeners();
+        this.process.stdout.removeAllListeners();
     }
 
     private generateArguments(): string[] {
@@ -65,7 +67,7 @@ export class GitBlameStream extends EventEmitter {
     }
 
     private setupListeners(): void {
-        this.process.addListener("close", (code) => this.close());
+        this.process.addListener("close", () => this.close());
         this.process.stdout.addListener("data", (chunk) => {
             this.data(chunk.toString());
         });
@@ -86,13 +88,9 @@ export class GitBlameStream extends EventEmitter {
 
         lines.forEach((line, index) => {
             if (line && line !== "boundary") {
-                const [all, key, value] = Array.from(line.match(/(.*?) (.*)/));
-                if (
-                    GitBlameStream.HASH_PATTERN.test(key) &&
-                    lines.hasOwnProperty(index + 1) &&
-                    /^(author|committer)/.test(lines[index + 1]) &&
-                    commitInfo.hash !== ""
-                ) {
+                const [, key, value] = line.match(/(.*?) (.*)/);
+
+                if (this.isNewCommit(key, lines, index, commitInfo)) {
                     this.commitInfoToCommitEmit(commitInfo);
                     commitInfo = GitBlame.blankCommitInfo(true);
                     commitInfo.filename = this.file.fsPath.replace(
@@ -100,6 +98,7 @@ export class GitBlameStream extends EventEmitter {
                         "",
                     );
                 }
+
                 this.processLine(key, value, commitInfo);
             }
         });
@@ -107,45 +106,59 @@ export class GitBlameStream extends EventEmitter {
         this.commitInfoToCommitEmit(commitInfo);
     }
 
+    private isNewCommit(
+        key: string,
+        lines: string[],
+        index: number,
+        commitInfo: IGitCommitInfo,
+    ): boolean {
+        return commitInfo.hash !== "" &&
+            lines.hasOwnProperty(index + 1) &&
+            GitBlameStream.HASH_PATTERN.test(key) &&
+            /^(author|committer)/.test(lines[index + 1]);
+    }
+
     private processLine(
         key: string,
         value: string,
         commitInfo: IGitCommitInfo,
     ): void {
-        const [keyPrefix, keySuffix] = key.split("-");
-        let owner: IGitCommitAuthor = {
-            mail: "",
-            name: "",
-            temporary: true,
-            timestamp: 0,
-            tz: "",
-        };
-
-        if (keyPrefix === "author") {
-            owner = commitInfo.author;
-        } else if (keyPrefix === "committer") {
-            owner = commitInfo.committer;
-        }
-
-        if (!owner.temporary && !keySuffix) {
-            owner.name = value;
-        } else if (keySuffix === "mail") {
-            owner.mail = value;
-        } else if (keySuffix === "time") {
-            owner.timestamp = parseInt(value, 10);
-        } else if (keySuffix === "tz") {
-            owner.tz = value;
-        } else if (key === "summary") {
+        if (key === "summary") {
             commitInfo.summary = value;
         } else if (GitBlameStream.HASH_PATTERN.test(key)) {
             commitInfo.hash = key;
 
-            const hash = key;
-            const [originalLine, finalLine, lines] = value
-                .split(" ")
-                .map((a) => parseInt(a, 10));
+            const [, finalLine, lines] = value.split(" ");
 
-            this.lineGroupToLineEmit(hash, lines, finalLine);
+            this.lineGroupToLineEmit(
+                commitInfo.hash,
+                parseInt(lines, 10),
+                parseInt(finalLine, 10),
+            );
+        } else {
+            const [who, what] = key.split("-");
+
+            if (who === "author") {
+                this.processAuthor(commitInfo.author, what, value);
+            } else if (who === "committer") {
+                this.processAuthor(commitInfo.committer, what, value);
+            }
+        }
+    }
+
+    private processAuthor(
+        who: IGitCommitAuthor,
+        what: string,
+        value: string,
+    ): void {
+        if (!what) {
+            who.name = value;
+        } else if (what === "mail") {
+            who.mail = value;
+        } else if (what === "tz") {
+            who.tz = value;
+        } else if (what === "time") {
+            who.timestamp = parseInt(value, 10);
         }
     }
 
